@@ -7,6 +7,9 @@ from model import GaitRecognitionModel
 from config import *
 from torch.utils.tensorboard import SummaryWriter
 
+# Ensure TKAN is installed
+os.system("pip install tkan")
+
 def download_casia_b():
     """Downloads CASIA-B dataset from Kaggle using API if not already downloaded."""
     if not os.path.exists("/content/casia-b"):
@@ -48,7 +51,7 @@ def train_model():
         print(f"Epoch [{epoch+1}/{NUM_EPOCHS}], Loss: {avg_loss:.4f}")
 
     torch.save(model.state_dict(), SAVE_MODEL_PATH)
-    print("Model saved successfully.")
+    print("✅ Model saved successfully.")
     writer.close()
 
 if __name__ == "__main__":
