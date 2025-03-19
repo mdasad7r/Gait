@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-import keras
+#import keras
 from tkan import TKAN  # Import TKAN from the provided repository
 
 class CNNFeatureExtractor(nn.Module):
