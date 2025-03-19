@@ -1,3 +1,4 @@
+import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -11,6 +12,10 @@ import utils
 
 # Load trained model
 def load_model():
+    if not os.path.exists(SAVE_MODEL_PATH):
+        print("❌ Model file not found. Please train the model first.")
+        exit()
+        
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = GaitRecognitionModel().to(device)
     model.load_state_dict(torch.load(SAVE_MODEL_PATH, map_location=device))
