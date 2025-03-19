@@ -1,5 +1,7 @@
 import torch
 import torch.nn as nn
+import keras
+from tkan import TKAN  # Import TKAN from the provided repository
 
 class CNNFeatureExtractor(nn.Module):
     def __init__(self):
@@ -16,22 +18,11 @@ class CNNFeatureExtractor(nn.Module):
     def forward(self, x):
         return self.conv_layers(x)
 
-class TKAN(nn.Module):
-    def __init__(self, input_dim, hidden_dim, output_dim):
-        super(TKAN, self).__init__()
-        self.fc1 = nn.Linear(input_dim, hidden_dim)
-        self.fc2 = nn.Linear(hidden_dim, output_dim)
-        self.activation = nn.ReLU()
-    
-    def forward(self, x):
-        x = self.activation(self.fc1(x))
-        return self.fc2(x)
-
 class GaitRecognitionModel(nn.Module):
     def __init__(self):
         super(GaitRecognitionModel, self).__init__()
         self.cnn_extractor = CNNFeatureExtractor()
-        self.tkan = TKAN(input_dim=4096, hidden_dim=512, output_dim=124)  # Adjust dimensions if needed
+        self.tkan = TKAN(input_dim=4096, hidden_dim=512, output_dim=124)  # Using imported TKAN
         self.final_cnn = nn.Sequential(
             nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
