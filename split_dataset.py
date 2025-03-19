@@ -18,14 +18,22 @@ subjects = sorted(os.listdir(DATASET_PATH))
 train_subjects = subjects[:74]
 test_subjects = subjects[74:]
 
-def move_files(subject_list, dest_path):
+def copy_subject_folders(subject_list, dest_path):
     for subject in subject_list:
-        subject_path = os.path.join(DATASET_PATH, subject)
-        dest_subject_path = os.path.join(dest_path, subject)
-        shutil.move(subject_path, dest_subject_path)
+        subject_source = os.path.join(DATASET_PATH, subject)
+        subject_dest = os.path.join(dest_path, subject)
 
-# Move subjects to respective folders
-move_files(train_subjects, TRAIN_PATH)
-move_files(test_subjects, TEST_PATH)
+        # Ensure the subject folder exists in train/test
+        os.makedirs(subject_dest, exist_ok=True)
 
-print("✅ Dataset split completed! Train/Test folders created.")
+        # Copy all walking conditions (bg, cl, nm)
+        for condition in os.listdir(subject_source):
+            condition_source = os.path.join(subject_source, condition)
+            condition_dest = os.path.join(subject_dest, condition)
+            shutil.copytree(condition_source, condition_dest, dirs_exist_ok=True)
+
+# Copy subjects to respective folders while maintaining structure
+copy_subject_folders(train_subjects, TRAIN_PATH)
+copy_subject_folders(test_subjects, TEST_PATH)
+
+print("✅ Dataset split completed! Train/Test folders created while maintaining structure.")
