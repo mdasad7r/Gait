@@ -1,7 +1,5 @@
-# config.py
-
-TRAIN_DIR = "/content/casia-b/train"
-TEST_DIR = "/content/casia-b/test"
+TRAIN_DIR = "/content/casia-b/train/output"
+TEST_DIR = "/content/casia-b/test/output"
 BATCH_SIZE = 32
 LEARNING_RATE = 0.001
 NUM_EPOCHS = 10
