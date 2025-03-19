@@ -9,15 +9,20 @@ class CASIABDataset(Dataset):
     def __init__(self, root_dir, transform=None):
         self.root_dir = root_dir
         self.transform = transform
-        self.image_paths = glob(os.path.join(root_dir, "*/*.png"))  # Update path if necessary
+        
+        # Read all image paths from subject and condition subfolders
+        self.image_paths = glob(os.path.join(root_dir, "*/*/*.png"))  # Now includes walking conditions
         self.labels = [int(os.path.basename(path).split('_')[0]) for path in self.image_paths]
-    
+
+        # Debugging: Print dataset size
+        print(f"📂 Loaded {len(self.image_paths)} images from {root_dir}")
+
     def __len__(self):
         return len(self.image_paths)
-    
+
     def __getitem__(self, idx):
         img_path = self.image_paths[idx]
-        image = Image.open(img_path).convert('L')
+        image = Image.open(img_path).convert('L')  # Convert to grayscale
         label = self.labels[idx]
         if self.transform:
             image = self.transform(image)
@@ -32,6 +37,8 @@ def get_dataloaders(train_dir, test_dir, batch_size=32):
 
     train_dataset = CASIABDataset(train_dir, transform=transform)
     test_dataset = CASIABDataset(test_dir, transform=transform)
+
+    print(f"✅ Training Samples: {len(train_dataset)} | Testing Samples: {len(test_dataset)}")
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
