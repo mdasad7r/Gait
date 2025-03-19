@@ -1,1 +1,1 @@
-# Gait
+# Gait Recognition Pipeline
