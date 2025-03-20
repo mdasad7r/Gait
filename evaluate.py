@@ -8,21 +8,18 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 from dataset import get_dataloaders
 from model import GaitRecognitionModel
 from config import *
-import utils
 
-# Load trained model
 def load_model():
     if not os.path.exists(SAVE_MODEL_PATH):
         print("❌ Model file not found. Please train the model first.")
         exit()
-        
+    
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = GaitRecognitionModel().to(device)
     model.load_state_dict(torch.load(SAVE_MODEL_PATH, map_location=device))
     model.eval()
     return model, device
 
-# Evaluate model
 def evaluate_model():
     model, device = load_model()
     _, test_loader = get_dataloaders(TRAIN_DIR, TEST_DIR, BATCH_SIZE)
@@ -39,22 +36,26 @@ def evaluate_model():
             all_labels.extend(labels.cpu().numpy())
             all_preds.extend(preds.cpu().numpy())
 
+    # Convert predictions to 1-based subject ID
+    all_labels = [label + 1 for label in all_labels]
+    all_preds = [pred + 1 for pred in all_preds]
+
     # Compute Accuracy
     accuracy = accuracy_score(all_labels, all_preds)
     print(f"✅ Test Accuracy: {accuracy * 100:.2f}%")
 
     # Classification Report
     print("\n🔹 Classification Report:\n")
-    print(classification_report(all_labels, all_preds))
+    print(classification_report(all_labels, all_preds, digits=4))
 
     # Confusion Matrix
     cm = confusion_matrix(all_labels, all_preds)
     plot_confusion_matrix(cm)
 
-# Plot Confusion Matrix
 def plot_confusion_matrix(cm):
+    labels = [str(i).zfill(3) for i in range(1, 125)]  # Subject IDs from 001 to 124
     plt.figure(figsize=(12, 8))
-    sns.heatmap(cm, annot=False, cmap="Blues", fmt="d")
+    sns.heatmap(cm, annot=False, cmap="Blues", fmt="d", xticklabels=labels, yticklabels=labels)
     plt.xlabel("Predicted")
     plt.ylabel("Actual")
     plt.title("Confusion Matrix")
