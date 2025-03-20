@@ -10,31 +10,29 @@ TEST_PATH = "/content/casia-b/test/output"
 os.makedirs(TRAIN_PATH, exist_ok=True)
 os.makedirs(TEST_PATH, exist_ok=True)
 
-# Define subjects (001-124)
-subjects = sorted(os.listdir(DATASET_PATH))
+# Walking conditions for train and test sets
+TRAIN_CONDITIONS = {"nm": ["nm-01", "nm-02", "nm-03", "nm-04"], "bg": ["bg-01"], "cl": ["cl-01"]}
+TEST_CONDITIONS = {"nm": ["nm-05", "nm-06"], "bg": ["bg-02"], "cl": ["cl-02"]}
 
-# Split: First 74 for training, last 50 for testing
-train_subjects = subjects[:74]
-test_subjects = subjects[74:]
-
-def copy_subject_folders(subject_list, dest_path):
-    for subject in subject_list:
-        subject_source = os.path.join(DATASET_PATH, subject)
-        subject_dest = os.path.join(dest_path, subject)
-
-        # Ensure the subject folder exists
-        os.makedirs(subject_dest, exist_ok=True)
-
-        # Copy subfolders (bg-01, cl-01, nm-01, etc.) and their images
-        for condition in os.listdir(subject_source):
+def copy_condition_data(subject, conditions, source_path, dest_path):
+    subject_source = os.path.join(source_path, subject)
+    subject_dest = os.path.join(dest_path, subject)
+    os.makedirs(subject_dest, exist_ok=True)
+    
+    for category, condition_list in conditions.items():
+        for condition in condition_list:
             condition_source = os.path.join(subject_source, condition)
-            condition_dest = os.path.join(dest_path, subject, condition)
-
-            if os.path.isdir(condition_source):  # Ensure it's a folder
+            condition_dest = os.path.join(subject_dest, condition)
+            
+            if os.path.isdir(condition_source):  # Ensure it's a valid folder
                 shutil.copytree(condition_source, condition_dest, dirs_exist_ok=True)
 
-# Copy subjects while keeping walking conditions (`bg-01`, `nm-01`, etc.)
-copy_subject_folders(train_subjects, TRAIN_PATH)
-copy_subject_folders(test_subjects, TEST_PATH)
+# Get all subject IDs
+subjects = sorted(os.listdir(DATASET_PATH))
 
-print("✅ Dataset split completed! Train/Test folders now contain images in the correct structure.")
+# Split dataset based on walking conditions
+for subject in subjects:
+    copy_condition_data(subject, TRAIN_CONDITIONS, DATASET_PATH, TRAIN_PATH)
+    copy_condition_data(subject, TEST_CONDITIONS, DATASET_PATH, TEST_PATH)
+
+print("✅ Dataset split completed based on walking conditions! Train/Test folders now contain images structured correctly.")
