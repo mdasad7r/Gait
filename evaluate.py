@@ -1,4 +1,6 @@
 import os
+os.environ["KERAS_BACKEND"] = "torch"
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -9,6 +11,8 @@ from dataset import get_dataloaders
 from model import GaitRecognitionModel
 from config import *
 
+SEQUENCE_LEN = 10  # Must match training setting
+
 def load_model():
     if not os.path.exists(SAVE_MODEL_PATH):
         print("❌ Model file not found. Please train the model first.")
@@ -16,13 +20,21 @@ def load_model():
     
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = GaitRecognitionModel().to(device)
-    model.load_state_dict(torch.load(SAVE_MODEL_PATH, map_location=device))
+
+    state_dict = torch.load(SAVE_MODEL_PATH, map_location=device)
+    model.load_state_dict(state_dict, strict=False)
     model.eval()
     return model, device
 
 def evaluate_model():
     model, device = load_model()
-    _, test_loader = get_dataloaders(TRAIN_DIR, TEST_DIR, BATCH_SIZE)
+
+    # ✅ Add sequence_len to keep all sequences same length
+    _, test_loader = get_dataloaders(
+        TRAIN_DIR, TEST_DIR,
+        batch_size=BATCH_SIZE,
+        sequence_len=SEQUENCE_LEN
+    )
 
     all_labels = []
     all_preds = []
