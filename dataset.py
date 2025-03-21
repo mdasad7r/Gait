@@ -10,11 +10,13 @@ class CASIABDataset(Dataset):
         self.root_dir = root_dir
         self.transform = transform
         
-        # Read all image paths from subjects AND their walking condition subfolders
-        self.image_paths = glob(os.path.join(root_dir, "*/*/*.png"))  # Matches images in walking conditions
-        self.labels = [int(os.path.basename(os.path.dirname(path))) for path in self.image_paths]
+        # Recursively read all PNG image paths
+        self.image_paths = glob(os.path.join(root_dir, "**", "*.png"), recursive=True)
 
-        # Debugging: Print dataset size
+        # Extract label from subject ID (first folder after root)
+        #self.labels = [int(path.split("/")[-4]) for path in self.image_paths]
+        self.labels = [int(os.path.basename(os.path.normpath(path)).split("-")[0]) for path in self.image_paths]
+
         print(f"📂 Loaded {len(self.image_paths)} images from {root_dir}")
 
     def __len__(self):
