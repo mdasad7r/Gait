@@ -21,8 +21,15 @@ class GaitRecognitionModel(nn.Module):
     def __init__(self):
         super(GaitRecognitionModel, self).__init__()
         self.cnn_extractor = CNNFeatureExtractor()
-        self.tkan = TKAN(input_dim=4096, hidden_dim=512, output_dim=124)
-        
+        #self.tkan = TKAN(input_dim=4096, hidden_dim=512, output_dim=124)
+        self.tkan = TKAN(
+              512,
+              sub_kan_configs=['relu', 'relu', 'relu'],
+              return_sequences=False,
+              use_bias=True
+          )
+
+
         self.final_cnn = nn.Sequential(
             nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
@@ -34,11 +41,12 @@ class GaitRecognitionModel(nn.Module):
         self.fc = nn.Linear(128, 124)  # 124 subject classes
 
     def forward(self, x):
-        x = self.cnn_extractor(x)
-        x = x.view(x.size(0), -1)
-        x = self.tkan(x)
-        x = x.view(x.size(0), 64, 1, 1)
-        x = self.final_cnn(x)
-        x = x.view(x.size(0), -1)
-        x = self.fc(x)
-        return x  # Removed softmax, as CrossEntropyLoss applies it automatically
+      B, T, C, H, W = x.shape
+      x = x.view(B * T, C, H, W)
+      x = self.cnn_extractor(x)            # (B*T, C', H', W')
+      x = torch.flatten(x, start_dim=1)    # (B*T, features)
+      x = x.view(B, T, -1)                 # ➕ reshape to (B, T, features)
+      x = self.tkan(x)                     # (B, units)
+      x = self.classifier(x)               # (B, num_classes)
+      return x
+
