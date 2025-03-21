@@ -25,7 +25,7 @@ def copy_condition_data(subject, conditions, source_path, dest_path):
             condition_dest = os.path.join(subject_dest, condition)
             
             if os.path.isdir(condition_source):  # Ensure it's a valid folder
-                shutil.copytree(condition_source, condition_dest, dirs_exist_ok=True)
+                shutil.move(condition_source, condition_dest)
 
 # Get all subject IDs
 subjects = sorted(os.listdir(DATASET_PATH))
