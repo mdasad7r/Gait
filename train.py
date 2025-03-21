@@ -1,4 +1,7 @@
 import os
+os.environ["KERAS_BACKEND"] = "torch"
+
+import os
 import torch
 import torch.optim as optim
 import torch.nn as nn
@@ -15,7 +18,11 @@ def train_model():
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.5)  # Learning rate scheduler
     writer = SummaryWriter()
 
-    train_loader, test_loader = get_dataloaders(TRAIN_DIR, TEST_DIR, BATCH_SIZE)
+    #train_loader, test_loader = get_dataloaders(TRAIN_DIR, TEST_DIR, BATCH_SIZE)
+    train_loader, test_loader = get_dataloaders(
+    TRAIN_DIR, TEST_DIR, BATCH_SIZE,
+    sequence_len=60  # or 50, 64, etc. depending on what fits in memory
+)
     
     best_loss = float("inf")  # Track best loss
 
