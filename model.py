@@ -41,12 +41,13 @@ class GaitRecognitionModel(nn.Module):
         self.fc = nn.Linear(128, 124)  # 124 subject classes
 
     def forward(self, x):
-      B, T, C, H, W = x.shape
-      x = x.view(B * T, C, H, W)
-      x = self.cnn_extractor(x)            # (B*T, C', H', W')
-      x = torch.flatten(x, start_dim=1)    # (B*T, features)
-      x = x.view(B, T, -1)                 # ➕ reshape to (B, T, features)
-      x = self.tkan(x)                     # (B, units)
-      x = self.classifier(x)               # (B, num_classes)
-      return x
+        B, T, C, H, W = x.shape
+        x = x.view(B * T, C, H, W)
+        x = self.cnn_extractor(x)         # (B*T, 64, 16, 16)
+        x = self.final_cnn(x)             # (B*T, 128, 1, 1)
+        x = x.view(B, T, 128)             # (B, T, 128)
+        x = self.tkan(x)                  # (B, 512)
+        x = self.fc(x)                    # (B, 124)
+        return x
+
 
