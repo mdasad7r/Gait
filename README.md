@@ -36,7 +36,6 @@ Follow the steps below to set up and train the model in Colab.
 
 ```python
 !pip install -r requirement.txt
-!pip install tkan
 ```
 
 ---
@@ -45,7 +44,7 @@ Follow the steps below to set up and train the model in Colab.
 
 ```python
 from google.colab import files
-uploaded = files.upload()  # Upload kaggle.json
+uploaded = files.upload()  # Upload kaggle.json from local pc
 ```
 
 ```python
@@ -60,17 +59,18 @@ uploaded = files.upload()  # Upload kaggle.json
 
 Download and extract CASIA-B dataset into:
 ```
-/content/casia-b/train/output/
-                      test/output/
+!kaggle datasets download -d trnquanghuyn/casia-b -p /content
+!unzip /content/casia-b.zip -d /content/casia-b
 ```
 
 Organize it so each subfolder contains gait sequences per subject.
 
+Before Training Run: !python split_dataset.py to make the dataset format properly structured
 ---
 
 ### 🏃 Step 5: Train the Model
 
-Make sure to update `config.py` if needed (batch size, epochs, etc.).
+Make sure to update `config.py` if needed (batch size, epochs, etc.) if using low gpu like T4.
 
 ```python
 !python train.py
@@ -110,7 +110,10 @@ os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 
 ## 🧠 Model Output
 
-The final output is a tensor of shape `(B, 124)`.
+The final output is a tensor of shape `(B, 124)`. {where, B stands for Batch Size.
+                                                  So the output shape (B, 124) means:
+                                                      You're passing B sequences of gait images in a single batch.
+                                                      For each sequence, the model predicts logits for 124 classes (one per subject in CASIA-B).}
 
 Use:
 ```python
