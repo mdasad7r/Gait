@@ -48,7 +48,7 @@ class CASIABSequenceDataset(Dataset):
         label = self.label_map[subject_id]
 
         return sequence, label
-
+"""
 def get_dataloaders(train_dir, test_dir, batch_size=4, sequence_len=None):
     transform = transforms.Compose([
         transforms.Resize((64, 64)),
@@ -63,5 +63,32 @@ def get_dataloaders(train_dir, test_dir, batch_size=4, sequence_len=None):
 
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+
+    return train_loader, test_loader
+"""
+#preload into memory for faster execution but needs more gpu ram memory
+def get_dataloaders(train_dir, test_dir, batch_size=4, sequence_len=None):
+    transform = transforms.Compose([
+        transforms.Resize((64, 64)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.5], std=[0.5])
+    ])
+
+    train_dataset = CASIABSequenceDataset(train_dir, transform=transform, sequence_len=sequence_len)
+    test_dataset = CASIABSequenceDataset(test_dir, transform=transform, sequence_len=sequence_len)
+
+    print("Preloading training dataset into memory...")
+    train_dataset = list(train_dataset)  # Preload into memory
+    print("Preloading testing dataset into memory...")
+    test_dataset = list(test_dataset)
+
+    print(f"✅ Training Sequences: {len(train_dataset)} | Testing Sequences: {len(test_dataset)}")
+
+    train_loader = torch.utils.data.DataLoader(
+        train_dataset, batch_size=batch_size, shuffle=True, num_workers=0
+    )
+    test_loader = torch.utils.data.DataLoader(
+        test_dataset, batch_size=batch_size, shuffle=False, num_workers=0
+    )
 
     return train_loader, test_loader
