@@ -81,9 +81,9 @@ def train_model():
         TRAIN_DIR, TEST_DIR, BATCH_SIZE, sequence_len=10
     )
 
-    best_val_loss = float("inf")
-    patience = 3  # Stop after 3 epochs of no improvement
-    patience_counter = 0
+    #best_val_loss = float("inf")
+    #patience = 3  # Stop after 3 epochs of no improvement
+    #patience_counter = 0
 
     for epoch in range(NUM_EPOCHS):
         # Training
@@ -113,7 +113,7 @@ def train_model():
         writer.add_scalar("Validation Loss", avg_val_loss, epoch)
 
         print(f"Epoch [{epoch+1}/{NUM_EPOCHS}], Train Loss: {avg_train_loss:.4f}, Val Loss: {avg_val_loss:.4f}")
-
+"""
         # Early stopping
         if avg_val_loss < best_val_loss:
             best_val_loss = avg_val_loss
@@ -125,7 +125,7 @@ def train_model():
             if patience_counter >= patience:
                 print("Early stopping triggered!")
                 break
-
+"""
         scheduler.step()
 
     writer.close()
