@@ -78,8 +78,9 @@ def train_model():
     writer = SummaryWriter()
 
     train_loader, test_loader = get_dataloaders(
-        TRAIN_DIR, TEST_DIR, BATCH_SIZE, sequence_len=10
+        TRAIN_DIR, TEST_DIR, BATCH_SIZE, sequence_len=50
     )
+    #SEQUENCE_LEN = 10
 
     best_val_acc = 0.0
     patience = 3
