@@ -1,56 +1,66 @@
 import os
 import torch
+import torch.nn as nn
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from dataset import get_dataloaders
 from model import GaitRecognitionModel
-from torchvision import transforms
-from PIL import Image
-from glob import glob
-from config import SEQUENCE_LEN, DEFAULT_MODEL_PATH
+from config import *
+from utils import calculate_accuracy, calculate_top5_accuracy
 
-DEFAULT_MODEL_PATH = "/content/drive/MyDrive/gait_recognition_model.pth"
-
-def load_model(model_path):
+def load_model():
+    if not os.path.exists(SAVE_MODEL_PATH):
+        print("❌ Model file not found. Please train the model first.")
+        exit()
+    
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = GaitRecognitionModel().to(device)
-    state_dict = torch.load(model_path, map_location=device)
-    model.load_state_dict(state_dict)  # Remove strict=False after fixes
+    state_dict = torch.load(SAVE_MODEL_PATH, map_location=device)
+    model.load_state_dict(state_dict)
     model.eval()
     return model, device
 
-def preprocess_sequence(sequence_dir):
-    transform = transforms.Compose([
-        transforms.Resize((64, 64)),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.5], std=[0.5])
-    ])
+def evaluate_model():
+    model, device = load_model()
+    _, test_loader = get_dataloaders(
+        TRAIN_DIR, TEST_DIR,
+        batch_size=BATCH_SIZE,
+        sequence_len=SEQUENCE_LEN
+    )
 
-    image_paths = sorted(glob(os.path.join(sequence_dir, "*.png")))
-    frames = []
-
-    for path in image_paths[:SEQUENCE_LEN]:
-        img = Image.open(path).convert('L')
-        img = transform(img)
-        frames.append(img)
-
-    sequence = torch.stack(frames)
-    if len(frames) < SEQUENCE_LEN:
-        pad_len = SEQUENCE_LEN - len(frames)
-        pad = torch.zeros((pad_len, *frames[0].shape))
-        sequence = torch.cat([sequence, pad], dim=0)
-
-    sequence = sequence.unsqueeze(0)
-    return sequence
-
-def predict(sequence_dir, model_path=DEFAULT_MODEL_PATH):
-    model, device = load_model(model_path)
-    sequence = preprocess_sequence(sequence_dir)
-    sequence = sequence.to(device)
+    all_labels = []
+    all_preds = []
 
     with torch.no_grad():
-        output = model(sequence)
-        prediction = torch.argmax(output, dim=1).item()
-    return prediction
+        for images, labels in test_loader:
+            images, labels = images.to(device).float(), labels.to(device).long()
+            outputs = model(images)
+            _, preds = torch.max(outputs, 1)
+            all_labels.extend(labels.cpu().numpy())
+            all_preds.extend(preds.cpu().numpy())
+
+    all_labels = [label + 1 for label in all_labels]
+    all_preds = [pred + 1 for pred in all_preds]
+
+    accuracy = accuracy_score(all_labels, all_preds)
+    top5_acc = calculate_top5_accuracy(model, test_loader, device)
+    print(f"✅ Test Accuracy: {accuracy * 100:.2f}%, Top-5 Accuracy: {top5_acc:.2f}%")
+
+    print("\n🔹 Classification Report:\n")
+    print(classification_report(all_labels, all_preds, digits=4))
+
+    cm = confusion_matrix(all_labels, all_preds)
+    plot_confusion_matrix(cm)
+
+def plot_confusion_matrix(cm):
+    labels = [str(i).zfill(3) for i in range(1, 125)]
+    plt.figure(figsize=(12, 8))
+    sns.heatmap(cm, annot=False, cmap="Blues", fmt="d", xticklabels=labels, yticklabels=labels)
+    plt.xlabel("Predicted")
+    plt.ylabel("Actual")
+    plt.title("Confusion Matrix")
+    plt.show()
 
 if __name__ == "__main__":
-    test_sequence = "/content/casia-b/test/output/001/nm-05/000"
-    prediction = predict(test_sequence)
-    print(f"Predicted Subject ID: {prediction + 1:03d}")
+    evaluate_model()
