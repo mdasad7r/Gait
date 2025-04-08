@@ -5,7 +5,8 @@ from torchvision import transforms
 from PIL import Image
 from glob import glob
 
-SEQUENCE_LEN = 10  # Must match training/evaluation
+#SEQUENCE_LEN = 10  # Must match training/evaluation
+SEQUENCE_LEN = 50
 DEFAULT_MODEL_PATH = "/content/drive/MyDrive/gait_recognition_model.pth"
 
 def load_model(model_path):
