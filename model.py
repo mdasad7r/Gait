@@ -23,12 +23,20 @@ class GaitRecognitionModel(nn.Module):
         super(GaitRecognitionModel, self).__init__()
         self.cnn_extractor = CNNFeatureExtractor()
         #self.tkan = TKAN(input_dim=4096, hidden_dim=512, output_dim=124)
+        """
         self.tkan = TKAN(
               512,
               sub_kan_configs=['relu', 'relu', 'relu'],
               return_sequences=False,
               use_bias=True
-          )
+          )"""
+        self.tkan = TKAN(
+            input_dim=128,  # Matches final_cnn output
+            hidden_dim=512,
+            sub_kan_configs=['relu', 'relu', 'relu'],
+            return_sequences=False,
+            use_bias=True
+        )
 
 
         self.final_cnn = nn.Sequential(
@@ -39,7 +47,8 @@ class GaitRecognitionModel(nn.Module):
             nn.Dropout(0.3)       # Added Dropout
         )
         
-        self.fc = nn.Linear(128, 124)  # 124 subject classes
+        #self.fc = nn.Linear(128, 124)  # 124 subject classes
+        self.fc = nn.Linear(512, 124)  # Matches TKAN hidden_dim
 
 
 """
