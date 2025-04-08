@@ -1,8 +1,5 @@
 torch
 torchvision
-tensorflow
-keras
-tkan
 matplotlib
 seaborn
 scikit-learn
