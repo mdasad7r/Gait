@@ -78,16 +78,14 @@ def train_model():
     writer = SummaryWriter()
 
     train_loader, test_loader = get_dataloaders(
-        TRAIN_DIR, TEST_DIR, BATCH_SIZE, sequence_len=50
+        TRAIN_DIR, TEST_DIR, BATCH_SIZE, sequence_len=SEQUENCE_LEN
     )
-    #SEQUENCE_LEN = 10
 
     best_val_acc = 0.0
     patience = 3
     patience_counter = 0
 
     for epoch in range(NUM_EPOCHS):
-        # Training
         model.train()
         running_loss = 0.0
         for images, labels in train_loader:
@@ -100,35 +98,39 @@ def train_model():
             running_loss += loss.item()
         avg_train_loss = running_loss / len(train_loader)
 
-        # Validation
         model.eval()
         val_loss = 0.0
         val_acc = calculate_accuracy(model, test_loader, device)
+        val_top5_acc = 0
         with torch.no_grad():
             for images, labels in test_loader:
                 images, labels = images.to(device).float(), labels.to(device).long()
                 outputs = model(images)
                 loss = criterion(outputs, labels)
                 val_loss += loss.item()
+                _, top5_preds = outputs.topk(5, dim=1)
+                val_top5_acc += (top5_preds == labels.view(-1, 1)).sum().item()
         avg_val_loss = val_loss / len(test_loader)
+        val_top5_acc = 100 * val_top5_acc / len(test_loader.dataset)
 
-        print(f"Epoch [{epoch+1}/{NUM_EPOCHS}], Train Loss: {avg_train_loss:.4f}, Val Loss: {avg_val_loss:.4f}, Val Acc: {val_acc:.2f}%")
+        print(f"Epoch [{epoch+1}/{NUM_EPOCHS}], Train Loss: {avg_train_loss:.4f}, Val Loss: {avg_val_loss:.4f}, Val Acc: {val_acc:.2f}%, Val Top-5 Acc: {val_top5_acc:.2f}%")
         writer.add_scalar("Training Loss", avg_train_loss, epoch)
         writer.add_scalar("Validation Loss", avg_val_loss, epoch)
         writer.add_scalar("Validation Accuracy", val_acc, epoch)
+        writer.add_scalar("Validation Top-5 Accuracy", val_top5_acc, epoch)
 
-        # Save best model based on validation accuracy
         if val_acc > best_val_acc:
             best_val_acc = val_acc
             torch.save(model.state_dict(), SAVE_MODEL_PATH)
             print("✅ Best model saved!")
-        #   patience_counter = 0
-        #else:
-         #   patience_counter += 1
-          #  if patience_counter >= patience:
-          #      print("Early stopping triggered!")
-          #      break
-
+            """
+            patience_counter = 0
+        else:
+            patience_counter += 1
+            if patience_counter >= patience:
+                print("Early stopping triggered!")
+                break
+            """
         scheduler.step()
 
     writer.close()
