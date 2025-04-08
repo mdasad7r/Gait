@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-#from tkan import TKAN  # Import TKAN
 from tkan_pytorch import TKAN
 
 class CNNFeatureExtractor(nn.Module):
@@ -22,44 +21,30 @@ class GaitRecognitionModel(nn.Module):
     def __init__(self):
         super(GaitRecognitionModel, self).__init__()
         self.cnn_extractor = CNNFeatureExtractor()
-        #self.tkan = TKAN(input_dim=4096, hidden_dim=512, output_dim=124)
-        """
-        self.tkan = TKAN(
-              512,
-              sub_kan_configs=['relu', 'relu', 'relu'],
-              return_sequences=False,
-              use_bias=True
-          )"""
         self.tkan = TKAN(
             input_dim=128,  # Matches final_cnn output
             hidden_dim=512,
-            sub_kan_configs=['relu', 'relu', 'relu'],
+            sub_kan_configs=[3, 2, 1],  # Cubic, quadratic, linear splines
             return_sequences=False,
             use_bias=True
         )
-
-
         self.final_cnn = nn.Sequential(
             nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
-            nn.AdaptiveAvgPool2d((1,1)),
-            nn.BatchNorm2d(128),  # Added Batch Normalization
-            nn.Dropout(0.3)       # Added Dropout
+            nn.AdaptiveAvgPool2d((1, 1)),
+            nn.BatchNorm2d(128),
+            nn.Dropout(0.3)
         )
-        
-        #self.fc = nn.Linear(128, 124)  # 124 subject classes
-        self.fc = nn.Linear(512, 124)  # Matches TKAN hidden_dim
-
-
+        self.fc = nn.Linear(512, 124)
 
     def forward(self, x):
         B, T, C, H, W = x.shape
-        x = x.view(B * T, C, H, W)
-        x = self.cnn_extractor(x)         # (B*T, 64, 16, 16)
-        x = self.final_cnn(x)             # (B*T, 128, 1, 1)
-        x = x.view(B, T, 128)             # (B, T, 128)
-        x = self.tkan(x)                  # (B, 512)
-        x = self.fc(x)                    # (B, 124)
+        x = x.view(B * T, C, H, W)  # [B*T, 1, 64, 64]
+        x = self.cnn_extractor(x)  # [B*T, 64, 16, 16]
+        x = self.final_cnn(x)  # [B*T, 128, 1, 1]
+        x = x.view(B, T, 128)  # [B, T, 128]
+        x = self.tkan(x)  # [B, 512]
+        x = self.fc(x)  # [B, 124]
         return x
 
 """
