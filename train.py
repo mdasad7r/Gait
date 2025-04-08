@@ -58,7 +58,6 @@ def train_model():
 if __name__ == "__main__":
     train_model()
 """
-
 import os
 import torch
 import torch.optim as optim
@@ -67,7 +66,7 @@ from dataset import get_dataloaders
 from model import GaitRecognitionModel
 from config import *
 from torch.utils.tensorboard import SummaryWriter
-from utils import calculate_accuracy
+from utils import calculate_accuracy, calculate_top5_accuracy
 
 def train_model():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -82,7 +81,7 @@ def train_model():
     )
 
     best_val_acc = 0.0
-    patience = 3
+    patience = 5  # Increased for longer training
     patience_counter = 0
 
     for epoch in range(NUM_EPOCHS):
@@ -101,17 +100,14 @@ def train_model():
         model.eval()
         val_loss = 0.0
         val_acc = calculate_accuracy(model, test_loader, device)
-        val_top5_acc = 0
+        val_top5_acc = calculate_top5_accuracy(model, test_loader, device)
         with torch.no_grad():
             for images, labels in test_loader:
                 images, labels = images.to(device).float(), labels.to(device).long()
                 outputs = model(images)
                 loss = criterion(outputs, labels)
                 val_loss += loss.item()
-                _, top5_preds = outputs.topk(5, dim=1)
-                val_top5_acc += (top5_preds == labels.view(-1, 1)).sum().item()
         avg_val_loss = val_loss / len(test_loader)
-        val_top5_acc = 100 * val_top5_acc / len(test_loader.dataset)
 
         print(f"Epoch [{epoch+1}/{NUM_EPOCHS}], Train Loss: {avg_train_loss:.4f}, Val Loss: {avg_val_loss:.4f}, Val Acc: {val_acc:.2f}%, Val Top-5 Acc: {val_top5_acc:.2f}%")
         writer.add_scalar("Training Loss", avg_train_loss, epoch)
@@ -130,7 +126,8 @@ def train_model():
             if patience_counter >= patience:
                 print("Early stopping triggered!")
                 break
-            """
+                """
+
         scheduler.step()
 
     writer.close()
