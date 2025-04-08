@@ -1,6 +1,4 @@
 import os
-os.environ["KERAS_BACKEND"] = "torch"
-
 import torch
 import torch.nn as nn
 import torch.optim as optim
