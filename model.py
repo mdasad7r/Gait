@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
-from tkan import TKAN  # Import TKAN
+#from tkan import TKAN  # Import TKAN
+from tkan_pytorch import TKAN
 
 class CNNFeatureExtractor(nn.Module):
     def __init__(self):
