@@ -9,7 +9,8 @@ from dataset import get_dataloaders
 from model import GaitRecognitionModel
 from config import *
 
-SEQUENCE_LEN = 10  # Must match training setting
+#SEQUENCE_LEN = 10  # Must match training setting
+SEQUENCE_LEN = 50
 
 def load_model():
     if not os.path.exists(SAVE_MODEL_PATH):
