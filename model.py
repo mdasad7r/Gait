@@ -51,7 +51,7 @@ class GaitRecognitionModel(nn.Module):
         self.fc = nn.Linear(512, 124)  # Matches TKAN hidden_dim
 
 
-"""
+
     def forward(self, x):
         B, T, C, H, W = x.shape
         x = x.view(B * T, C, H, W)
@@ -61,8 +61,8 @@ class GaitRecognitionModel(nn.Module):
         x = self.tkan(x)                  # (B, 512)
         x = self.fc(x)                    # (B, 124)
         return x
-"""
 
+"""
     def forward(self, x):
         B, T, C, H, W = x.shape
         cnn_out = []
@@ -77,3 +77,4 @@ class GaitRecognitionModel(nn.Module):
         x = self.tkan(cnn_out)                                     # (B, 512)
         x = self.fc(x)                                             # (B, 124)
         return x
+"""
