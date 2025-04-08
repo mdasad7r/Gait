@@ -1,6 +1,4 @@
 import os
-os.environ["KERAS_BACKEND"] = "torch"  # Ensures TKAN works with PyTorch backend
-
 import torch
 from model import GaitRecognitionModel
 from torchvision import transforms
