@@ -7,33 +7,46 @@ class SplineActivation(nn.Module):
         super(SplineActivation, self).__init__()
         self.spline_order = spline_order
         self.grid_size = grid_size
-        # Grid points (learnable)
         self.grid = nn.Parameter(torch.linspace(-1, 1, grid_size), requires_grad=False)
-        # Coefficients for B-spline basis (learnable)
         self.coeffs = nn.Parameter(torch.randn(input_dim, grid_size + spline_order - 1))
 
     def _bspline_basis(self, x):
-        """Compute B-spline basis functions recursively."""
-        B = torch.zeros(x.shape[0], self.grid_size + self.spline_order - 1, device=x.device)
+        """Compute B-spline basis functions for a 3D input tensor."""
+        B, D, _ = x.shape
+        x = x.squeeze(-1)  # [B, D]
+        basis_size = self.grid_size + self.spline_order - 1
+        B_out = torch.zeros(B, D, basis_size, device=x.device)
+
         # Degree 0 basis
         for i in range(self.grid_size - 1):
-            B[:, i] = ((self.grid[i] <= x) & (x < self.grid[i + 1])).float()
-        B[:, self.grid_size - 1] = (x >= self.grid[-1]).float()
+            g0 = self.grid[i]
+            g1 = self.grid[i + 1]
+            B_out[:, :, i] = ((g0 <= x) & (x < g1)).float()
+        B_out[:, :, self.grid_size - 1] = (x >= self.grid[-1]).float()
 
         # Higher-order basis
         for k in range(1, self.spline_order + 1):
-            B_prev = B.clone()
-            for i in range(self.grid_size + self.spline_order - k - 1):
-                left = (x - self.grid[i]) / (self.grid[i + k] - self.grid[i]) * B_prev[:, i]
-                right = (self.grid[i + k + 1] - x) / (self.grid[i + k + 1] - self.grid[i + 1]) * B_prev[:, i + 1]
-                B[:, i] = left + right
-        return B
+            B_prev = B_out.clone()  # Fix: Use B_out instead of undefined B_prev
+            for i in range(basis_size - k):
+                g_i = self.grid[i]
+                g_ik = self.grid[i + k]
+                g_i1 = self.grid[i + 1]
+                g_ik1 = self.grid[i + k + 1]
+
+                denom1 = g_ik - g_i
+                denom2 = g_ik1 - g_i1
+
+                # Use torch.where for zero-division safety
+                left = torch.where(denom1 != 0, (x - g_i) / denom1 * B_prev[:, :, i], torch.zeros_like(x))
+                right = torch.where(denom2 != 0, (g_ik1 - x) / denom2 * B_prev[:, :, i + 1], torch.zeros_like(x))
+
+                B_out[:, :, i] = left + right
+
+        return B_out  # [B, D, basis_size]
 
     def forward(self, x):
-        # Apply B-spline basis to each input dimension
-        batch_size = x.shape[0]
         x_expanded = x.unsqueeze(-1)  # [B, input_dim, 1]
-        basis = self._bspline_basis(x_expanded)  # [B, input_dim, grid_size + spline_order - 1]
+        basis = self._bspline_basis(x_expanded)  # [B, input_dim, basis_size]
         output = torch.einsum('bid,di->bi', basis, self.coeffs)  # [B, input_dim]
         return output
 
