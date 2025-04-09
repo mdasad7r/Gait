@@ -1,29 +1,29 @@
 
-# 🧍‍♂️ Gait Recognition Using TKAN
+#  Gait Recognition Using TKAN
 
 This project performs **person identification from gait sequences** using **Temporal Kolmogorov-Arnold Networks (TKAN)**, a neural architecture that models both spatial and temporal patterns from silhouette sequences (CASIA-B dataset).
 
 ---
 
-## 📌 About the Network
+## About the Network
 
 The model architecture consists of:
 
-- 🧱 **CNNFeatureExtractor**: extracts spatial features from each image
-- 🌀 **TKAN**: learns temporal dependencies across walking sequences
-- 🎯 **Classifier**: predicts subject identity from learned gait features
+- **CNNFeatureExtractor**: extracts spatial features from each image
+- **TKAN**: learns temporal dependencies across walking sequences
+- **Classifier**: predicts subject identity from learned gait features
 
 > The model takes a **sequence of grayscale images** as input and outputs a subject ID (0–123 for CASIA-B dataset).
 
 ---
 
-## 🚀 How to Run This on Google Colab
+## How to Run This on Google Colab
 
 Follow the steps below to set up and train the model in Colab.
 
 ---
 
-### 🔧 Step 1: Clone the Repository
+### Step 1: Clone the Repository
 
 ```python
 !git clone https://github.com/mdasad7r/Gait
@@ -32,7 +32,7 @@ Follow the steps below to set up and train the model in Colab.
 
 ---
 
-### 📦 Step 2: Install Required Libraries
+### Step 2: Install Required Libraries
 
 ```python
 !pip install -r requirement.txt
@@ -40,7 +40,7 @@ Follow the steps below to set up and train the model in Colab.
 
 ---
 
-### 🔐 Step 3: Upload Kaggle Credentials (if using Kaggle for dataset)
+### Step 3: Upload Kaggle Credentials (if using Kaggle for dataset)
 
 ```python
 from google.colab import files
@@ -55,7 +55,7 @@ uploaded = files.upload()  # Upload kaggle.json from local pc
 
 ---
 
-### 📁 Step 4: Prepare CASIA-B Dataset
+### Step 4: Prepare CASIA-B Dataset
 
 Download and extract CASIA-B dataset into:
 ```
@@ -68,7 +68,7 @@ Organize it so each subfolder contains gait sequences per subject.
 Before Training Run: !python split_dataset.py to make the dataset format properly structured
 ---
 
-### 🏃 Step 5: Train the Model
+### Step 5: Train the Model
 
 Make sure to update `config.py` if needed (batch size, epochs, etc.) if using low gpu like T4.
 
@@ -80,7 +80,7 @@ Make sure to update `config.py` if needed (batch size, epochs, etc.) if using lo
 
 ---
 
-### 📈 Step 6: Evaluate or Infer
+### Step 6: Evaluate or Infer
 
 To run evaluation or inference after training:
 ```python
@@ -90,7 +90,7 @@ To run evaluation or inference after training:
 
 ---
 
-## ✅ Notes on GPU and Memory (Colab Tips)
+## Notes on GPU and Memory (Colab Tips)
 
 - If using a **T4/V100**, lower:
   - `BATCH_SIZE = 2`
@@ -108,7 +108,7 @@ os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 
 ---
 
-## 🧠 Model Output
+## Model Output
 
 The final output is a tensor of shape `(B, 124)`. {where, B stands for Batch Size.
                                                   So the output shape (B, 124) means:
